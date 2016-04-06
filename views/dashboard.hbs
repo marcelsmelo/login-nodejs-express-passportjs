@@ -1,0 +1,48 @@
+<div class="container">
+        <div class="page-header text-center">
+                <h1><span class="fa fa-anchor"></span> Dashboard</h1>
+
+                <a href="/logout" class="btn btn-default btn-sm">Logout</a>
+                <div class="row">
+                  <div class="col-sm-6">
+                          <div class="well">
+                              {{#if user.password}}
+                                  <h3><span class="fa fa-user"></span> Local</h3>
+                                  <p>
+                                          <strong>id</strong>: {{user._id}}<br/>
+                                          <strong>Email</strong>: {{user.email}}<br/>
+                                          <strong>password</strong>: {{user.password}}<br/>
+                                  </p>
+                                  {{#if user.facebook.id}}
+                                  <a href="/local/unlink" class="btn btn-default">Desassociar conta</a>
+                                  {{/if}}
+                              {{else}}
+                                  <a href="/local/link" class="btn btn-default">Cadastrar conta local</a>
+                              {{/if}}
+                          </div>
+                  </div>
+
+                        <!--Facebook Information-->
+            <div class="col-sm-6">
+                <div class="well">
+                    <h3 class="text-primary"><span class="fa fa-facebook"></span> Facebook</h3>
+                    {{#if user.facebook.id}}
+                        <p>
+                            <strong>id</strong>: {{user.facebook.id}}<br/>
+                            <strong>token</strong>: {{user.facebook.token}}<br/>
+                            <strong>email</strong>: {{user.email}}<br/>
+                            <strong>name</strong>: {{user.name}}<br/>
+                        </p>
+                        {{#if user.password}}
+                          <a href="/facebook/unlink" class="btn btn-primary">Desassociar conta</a>
+                        {{/if}}
+                    {{else}}
+                        <a href="/facebook/link" class="btn btn-primary">Conectar ao Facebook</a>
+                    {{/if}}
+                </div>
+            </div>
+
+
+                </div>
+        </div>
+</div>

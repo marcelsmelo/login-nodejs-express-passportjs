@@ -5,80 +5,59 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var passport = require('passport');
-var expressSession = require('express-session');
+var hbs = require('express-hbs');
+const mongoose = require('mongoose');
 
 var app = express();
 
-var config = require('./config/config.js');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
-
-/** BANCO DE DADOS **/
-
-var dbname=config.db.sgbd;
-var username='';
-var password='';
-var dbPort='';
-var host='';
-var database='';
-var url='';
-switch(dbname){
-    case 'mongodb':
-        var opts={
-            server:{
-                socketOptions:{keepAlive:1}
-            }
-        };
-        username=config.db.username;
-        password=config.db.password;
-        dbPort=config.db.port;
-        host=config.db.host;
-        database=config.db.database;
-        //url='mongodb://'+username+":"+password+"@"+host+":"+dbPort+"/"+database;
-        url = 'mongodb://'+host+'/'+database;
-
-        console.log("MongoDB URL: "+url);
-
-        var mongoose=require('mongoose');
-        //mongoose.connect(url, opts);
-        mongoose.connect(url);
-        break;
-    default:
-        throw new Error("Banco de dados desconhecido: "+dbname);
-        break;
-}
-
-/****************
- *** PASSPORT ***
- ****************/
-require('./lib/passport.js')(passport);
-app.use(require('express-session')({
-    secret: 'testesenhasecreta'
-  }));
-app.use(passport.initialize());
-app.use(passport.session());
+//Banco de dados
+const connection = require('./config/db.js')(mongoose);
 
 /**********************
  *** FLASH MESSAGES ***
  **********************/
 app.use(require('connect-flash')());
 
-/**********************
- ******** ROTAS *******
- **********************/
-require('./lib/route_loader.js')(app);
-
-
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'hbs');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const session = require('express-session');
+const MongoStore = require('connect-mongo')(session);
+app.use(session({
+  secret: 'qualquercoisaksadnckjadscdscdscndc',
+  resave: false,
+  rolling: true,
+  saveUninitialized: false,
+  store: new MongoStore({
+    mongooseConnection: mongoose.connection
+  })
+}));
+
+app.use(function(req, res, next) {
+  req.session.cookie.maxAge = 2592000000;
+  next();
+});
+
+app.use(passport.initialize());
+app.use(passport.session());
+require('./lib/passport.js')(passport);
+
+/**********************
+ ******** ROTAS *******
+ **********************/
+require('./lib/router_load.js')(app);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -110,6 +89,5 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
-
 
 module.exports = app;
